@@ -8,6 +8,13 @@
     "cypress:run": "cypress run --e2e",
     "test": "cypress run"
   },
+  "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "cypress": "^15.0.0"
+  }
 }
