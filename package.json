@@ -12,9 +12,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "node-fetch": "^3.3.2"
+    "@octokit/rest": "^22.0.0",
+    "dotenv": "^17.2.2",
+    "node-fetch": "^3.3.2",
+    "openai": "^5.22.0"
   },
   "devDependencies": {
     "cypress": "^15.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nam-joshi/ai-pr-testgen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nam-joshi/ai-pr-testgen/issues"
+  },
+  "homepage": "https://github.com/nam-joshi/ai-pr-testgen#readme"
 }
