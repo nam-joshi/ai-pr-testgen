@@ -1,31 +1,19 @@
 {
   "name": "ai-pr-testgen",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "AI PR Test Case Generator",
+  "main": "get-pr-files.js",
+  "type": "module",
   "scripts": {
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run --e2e",
-    "test": "cypress run"
+    "fetch-prs": "node -r dotenv/config get-pr-files.js",
+    "analyze": "node -r dotenv/config analyze-pr.mjs"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@octokit/rest": "^22.0.0",
+    "@octokit/rest": "^20.0.0",
     "dotenv": "^17.2.2",
-    "node-fetch": "^3.3.2",
-    "openai": "^5.22.0"
+    "openai": "^4.0.0"
   },
   "devDependencies": {
-    "cypress": "^15.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nam-joshi/ai-pr-testgen.git"
-  },
-  "bugs": {
-    "url": "https://github.com/nam-joshi/ai-pr-testgen/issues"
-  },
-  "homepage": "https://github.com/nam-joshi/ai-pr-testgen#readme"
+    "cypress": "^15.7.0"
+  }
 }
