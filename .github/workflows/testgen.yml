@@ -1,0 +1,33 @@
+name: AI PR TestGen
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  run-testgen:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write        # Needed to post a comment
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run AI TestGen
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: node scripts/run-testgen.js

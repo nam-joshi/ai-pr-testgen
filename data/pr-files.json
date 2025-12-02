@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "pr_number": 2,
+    "title": "Add search bar test to CSUF homepage test suite",
+    "author": "nam-joshi",
+    "files": [
+      {
+        "filename": "cypress/e2e/CSUF-homepage.cy.js",
+        "patch": "@@ -0,0 +1,10 @@\n+describe('CSUF Homepage Smoke Test', () => {\n+  it('Visits CSUF homepage', () => {\n+    cy.visit('https://www.fullerton.edu/');\n+    cy.title().should('include', 'Fullerton');\n+  });\n+  it(\"checks that the search bar is visible on homepage\", () => {\n+    cy.visit(\"https://www.fullerton.edu\");\n+    cy.get(\"input[type='search'], #search, .search\").should(\"exist\");\n+  });\n+});"
+      },
+      {
+        "filename": "cypress/e2e/smoke.cy.js",
+        "patch": "@@ -1,7 +1,13 @@\n describe('Smoke Test', () => {\n-    it('Visits the Kitchen Sink example', () => {\n+\n+  it('Visits the Kitchen Sink example', () => {\n       cy.visit('https://example.cypress.io')\n       cy.contains('Kitchen Sink').should('be.visible')\n-    })\n   })\n-  \n\\ No newline at end of file\n+\n+  it('Checks page title', () => {\n+    cy.visit('https://example.cypress.io/')\n+    cy.title().should('include', 'Kitchen Sink')\n+  })\n+\n+})"
+      }
+    ]
+  },
+  {
+    "pr_number": 1,
+    "title": "Update Cypress smoke test for PR demo",
+    "author": "nam-joshi",
+    "files": [
+      {
+        "filename": "cypress/e2e/CSUF-homepage.cy.js",
+        "patch": "@@ -0,0 +1,6 @@\n+describe('CSUF Homepage Smoke Test', () => {\n+  it('Visits CSUF homepage', () => {\n+    cy.visit('https://www.fullerton.edu/')\n+    cy.title().should('include', 'Fullerton')\n+  })\n+})"
+      },
+      {
+        "filename": "cypress/e2e/smoke.cy.js",
+        "patch": "@@ -1,7 +1,13 @@\n describe('Smoke Test', () => {\n-    it('Visits the Kitchen Sink example', () => {\n+\n+  it('Visits the Kitchen Sink example', () => {\n       cy.visit('https://example.cypress.io')\n       cy.contains('Kitchen Sink').should('be.visible')\n-    })\n   })\n-  \n\\ No newline at end of file\n+\n+  it('Checks page title', () => {\n+    cy.visit('https://example.cypress.io/')\n+    cy.title().should('include', 'Kitchen Sink')\n+  })\n+\n+})"
+      }
+    ]
+  }
+]

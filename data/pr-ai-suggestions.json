@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "pr_number": 2,
+    "title": "Add search bar test to CSUF homepage test suite",
+    "suggestions": [
+      "Test that the homepage loads",
+      "Verify navigation menu renders",
+      "Check that important links are visible"
+    ],
+    "source": "fallback"
+  },
+  {
+    "pr_number": 1,
+    "title": "Update Cypress smoke test for PR demo",
+    "suggestions": [
+      "Test that the homepage loads",
+      "Verify navigation menu renders",
+      "Check that important links are visible"
+    ],
+    "source": "fallback"
+  }
+]

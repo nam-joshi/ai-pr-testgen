@@ -1,4 +1,3 @@
-// get-pr-files.js (ESM)
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -8,20 +7,20 @@ import { Octokit } from "@octokit/rest";
 
 const owner = process.env.GITHUB_OWNER;
 const repo = process.env.GITHUB_REPO;
+const token = process.env.GITHUB_TOKEN;
 
-const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+const octokit = new Octokit({ auth: token });
 
-// Ensure output directory exists
 const outDir = path.join(process.cwd(), "data");
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
-async function fetchOpenPRs() {
+async function fetchPRs() {
   try {
     const { data: prs } = await octokit.pulls.list({
       owner,
       repo,
       state: "open",
-      per_page: 100,
+      per_page: 20,
     });
 
     const results = [];
@@ -33,33 +32,30 @@ async function fetchOpenPRs() {
         pull_number: pr.number,
       });
 
-      const normalizedFiles = files.map((f) => ({
-        filename: f.filename,
-        status: f.status,
-        patch: f.patch || "",
-        additions: f.additions,
-        deletions: f.deletions,
-        sha: f.sha,
-        raw_url: f.raw_url,
-      }));
+      const cypressFiles = files.filter((f) =>
+        f.filename.includes("cypress/")
+      );
 
       results.push({
         pr_number: pr.number,
         title: pr.title,
-        author: pr.user?.login || "",
-        html_url: pr.html_url,
-        created_at: pr.created_at,
-        files: normalizedFiles,
+        author: pr.user.login,
+        files: cypressFiles.map((f) => ({
+          filename: f.filename,
+          patch: f.patch || "",
+        })),
       });
     }
 
-    const outPath = path.join(outDir, "pr-files.json");
-    fs.writeFileSync(outPath, JSON.stringify(results, null, 2));
-    console.log("✔ PR files saved to data/pr-files.json");
+    fs.writeFileSync(
+      path.join(outDir, "pr-files.json"),
+      JSON.stringify(results, null, 2)
+    );
+
+    console.log("✔ PR data saved to data/pr-files.json");
   } catch (err) {
-    console.error("❌ Error fetching PRs:", err.message || err);
-    process.exitCode = 1;
+    console.error("❌ Error fetching PRs:", err);
   }
 }
 
-fetchOpenPRs();
+fetchPRs();

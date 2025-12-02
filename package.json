@@ -1,19 +1,12 @@
 {
   "name": "ai-pr-testgen",
   "version": "1.0.0",
-  "description": "AI PR Test Case Generator",
-  "main": "get-pr-files.js",
   "type": "module",
-  "scripts": {
-    "fetch-prs": "node -r dotenv/config get-pr-files.js",
-    "analyze": "node -r dotenv/config analyze-pr.mjs"
-  },
   "dependencies": {
-    "@octokit/rest": "^20.0.0",
-    "dotenv": "^17.2.2",
-    "openai": "^4.0.0"
-  },
-  "devDependencies": {
-    "cypress": "^15.7.0"
+    "@octokit/rest": "^19.0.13",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "openai": "^4.104.0"
   }
 }
