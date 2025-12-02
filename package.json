@@ -1,31 +1,12 @@
 {
   "name": "ai-pr-testgen",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run --e2e",
-    "test": "cypress run"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "type": "module",
   "dependencies": {
-    "@octokit/rest": "^22.0.0",
-    "dotenv": "^17.2.2",
-    "node-fetch": "^3.3.2",
-    "openai": "^5.22.0"
-  },
-  "devDependencies": {
-    "cypress": "^15.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nam-joshi/ai-pr-testgen.git"
-  },
-  "bugs": {
-    "url": "https://github.com/nam-joshi/ai-pr-testgen/issues"
-  },
-  "homepage": "https://github.com/nam-joshi/ai-pr-testgen#readme"
+    "@octokit/rest": "^19.0.13",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "openai": "^4.104.0"
+  }
 }

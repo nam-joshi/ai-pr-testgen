@@ -1,61 +1,71 @@
-// analyze-pr.mjs
-import dotenv from "dotenv";
-dotenv.config();
-
 import fs from "fs";
+import path from "path";
+import dotenv from "dotenv";
 import OpenAI from "openai";
 
-// Setup OpenAI client
+dotenv.config();
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Load PR data
-const prData = JSON.parse(fs.readFileSync("data/pr-files.json", "utf-8"));
+const PR_FILE = "./data/pr-files.json";
+const OUT_FILE = "./data/pr-ai-suggestions.json";
 
-// Array to store AI suggestions
-const aiSuggestions = [];
+async function generateAISuggestions(fileName, fileContent) {
+  const prompt = `
+You are a senior QA automation engineer.
 
-async function analyzePRs() {
-  for (const pr of prData) {
-    console.log(`\nPR #${pr.pr_number}: ${pr.title}`);
-    console.log(`Author: ${pr.author}`);
-    console.log(`Files Changed: ${pr.files_changed.join(", ")}`);
+A Cypress test file was modified: **${fileName}**
 
-    const prompt = `Analyze this PR and suggest possible test cases for the changed files: ${pr.files_changed.join(", ")}`;
+Here is the full content:
 
-    try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: "You are an expert QA engineer." },
-          { role: "user", content: prompt }
-        ],
-        max_tokens: 200
-      });
+${fileContent}
 
-      const suggestion = response.choices[0].message.content.trim();
-      console.log("AI Test Suggestions:\n", suggestion);
+Based on this file, generate **HIGH-QUALITY**, **realistic**, **professional**
+test case suggestions that expand coverage of this Cypress E2E test.
 
-      aiSuggestions.push({
-        pr_number: pr.pr_number,
-        title: pr.title,
-        author: pr.author,
-        files_changed: pr.files_changed,
-        ai_suggestions: suggestion
-      });
+Rules:
+- DO NOT mention .gitignore, package.json, locks, configs
+- ONLY generate suggestions related to the Cypress test behavior
+- Create 3–6 suggestions
+- Make them practical and based on the website behavior
 
-    } catch (error) {
-      console.error("Error generating AI suggestions:", error);
-    }
+Return suggestions ONLY as bullet points.
+`;
 
-    console.log("------------------------------------------------");
-  }
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }]
+  });
 
-  // Save AI suggestions to JSON
-  fs.writeFileSync("data/pr-ai-suggestions.json", JSON.stringify(aiSuggestions, null, 2));
-  console.log("\n✅ AI suggestions saved to data/pr-ai-suggestions.json");
+  return completion.choices[0].message.content;
 }
 
-// Run analysis
-analyzePRs();
+async function run() {
+  const data = JSON.parse(fs.readFileSync(PR_FILE, "utf8"));
+  const output = [];
+
+  for (const pr of data) {
+    const suggestions = [];
+
+    for (const f of pr.files) {
+      const ai = await generateAISuggestions(f.filename, f.content);
+      suggestions.push({
+        file: f.filename,
+        ai_suggestions: ai
+      });
+    }
+
+    output.push({
+      pr_number: pr.pr_number,
+      title: pr.title,
+      suggestions
+    });
+  }
+
+  fs.writeFileSync(OUT_FILE, JSON.stringify(output, null, 2));
+  console.log("✔ AI suggestions written to pr-ai-suggestions.json");
+}
+
+await run();

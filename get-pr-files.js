@@ -1,26 +1,29 @@
-// get-pr-files.js
-const { Octokit } = require("@octokit/rest");
-const fs = require("fs");
+import dotenv from "dotenv";
+dotenv.config();
 
-// 1️⃣ Setup Octokit with your GitHub Personal Access Token
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN, // Store your token in environment variable for security
-});
+import fs from "fs";
+import path from "path";
+import { Octokit } from "@octokit/rest";
 
-// 2️⃣ Define the repo and owner
-const owner = "nam-joshi"; // replace with repo owner
-const repo = "ai-pr-testgen";        // replace with repo name
+const owner = process.env.GITHUB_OWNER;
+const repo = process.env.GITHUB_REPO;
+const token = process.env.GITHUB_TOKEN;
 
-// 3️⃣ Function to fetch PRs and their changed files
-async function fetchPRFiles() {
+const octokit = new Octokit({ auth: token });
+
+const outDir = path.join(process.cwd(), "data");
+if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
+async function fetchPRs() {
   try {
     const { data: prs } = await octokit.pulls.list({
       owner,
       repo,
-      state: "open", // or "all" to fetch all PRs
+      state: "open",
+      per_page: 20,
     });
 
-    const result = [];
+    const results = [];
 
     for (const pr of prs) {
       const { data: files } = await octokit.pulls.listFiles({
@@ -29,24 +32,30 @@ async function fetchPRFiles() {
         pull_number: pr.number,
       });
 
-      const fileNames = files.map(file => file.filename);
+      const cypressFiles = files.filter((f) =>
+        f.filename.includes("cypress/")
+      );
 
-      result.push({
+      results.push({
         pr_number: pr.number,
         title: pr.title,
         author: pr.user.login,
-        files_changed: fileNames,
+        files: cypressFiles.map((f) => ({
+          filename: f.filename,
+          patch: f.patch || "",
+        })),
       });
     }
 
-    // Save result to data folder
-    fs.writeFileSync("data/pr-files.json", JSON.stringify(result, null, 2));
-    console.log("PR files saved to data/pr-files.json");
+    fs.writeFileSync(
+      path.join(outDir, "pr-files.json"),
+      JSON.stringify(results, null, 2)
+    );
 
-  } catch (error) {
-    console.error("Error fetching PRs:", error);
+    console.log("✔ PR data saved to data/pr-files.json");
+  } catch (err) {
+    console.error("❌ Error fetching PRs:", err);
   }
 }
 
-// Run the function
-fetchPRFiles();
+fetchPRs();

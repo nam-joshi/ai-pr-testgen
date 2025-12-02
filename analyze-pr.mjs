@@ -1,57 +1,102 @@
-import fs from "fs";
 import dotenv from "dotenv";
 dotenv.config();
 
+import fs from "fs";
+import path from "path";
+import OpenAI from "openai";
 
-// Load PR data
-const prData = JSON.parse(fs.readFileSync("data/pr-files.json", "utf-8"));
+const MODEL = "gpt-4o-mini";
 
-// Function to generate mock AI test suggestions based on filenames
-function generateMockSuggestions(files) {
-  const suggestions = [];
+const DATA_FILE = path.join(process.cwd(), "data", "pr-files.json");
+const OUT_FILE = path.join(process.cwd(), "data", "pr-ai-suggestions.json");
 
-  files.forEach(file => {
-    if (file.toLowerCase().includes("login")) {
-      suggestions.push(
-        "✅ Test login with valid username and valid password",
-        "❌ Test login with valid username and invalid password",
-        "❌ Test login with invalid username and valid password",
-        "❌ Test login with invalid username and invalid password",
-        "🔒 Test behavior when login fields are left empty",
-        "🔄 Test login session persists after refresh"
-      );
-    } else if (file.toLowerCase().includes("auth")) {
-      suggestions.push(
-        "🔐 Verify authentication token is generated correctly",
-        "🚫 Test access to protected routes without login",
-        "🔄 Test logout clears session/token"
-      );
-    } else if (file.toLowerCase().includes("dashboard")) {
-      suggestions.push(
-        "📊 Test that dashboard loads correctly with valid data",
-        "🔄 Verify UI updates when data changes"
-      );
-    } else if (file.toLowerCase().includes("utils")) {
-      suggestions.push(
-        "🧮 Verify utility functions handle edge cases (null, undefined, 0, empty string)",
-        "🔄 Test utils with both normal and extreme values"
-      );
-    } else {
-      suggestions.push(`📝 General test coverage for ${file}`);
-    }
-  });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-  return suggestions;
+function buildPrompt(pr) {
+  return `
+Analyze the following Cypress test code changes and generate:
+- 3 smoke tests
+- 3 negative tests
+- 3 edge-case tests
+
+Return JSON array only.
+
+PR Title: ${pr.title}
+
+Changed Files:
+${pr.files.map((f) => `File: ${f.filename}\nPatch:\n${f.patch}`).join("\n")}
+`;
 }
 
-// Loop through each PR and print summary with mock suggestions
-prData.forEach(pr => {
-  console.log(`PR #${pr.pr_number}: ${pr.title}`);
-  console.log(`Author: ${pr.author}`);
-  console.log(`Files Changed: ${pr.files_changed.length}`);
-  console.log(`Files: ${pr.files_changed.join(", ")}`);
-  console.log("AI Test Suggestions:");
-  const suggestions = generateMockSuggestions(pr.files_changed);
-  suggestions.forEach(s => console.log("- " + s));
-  console.log("------------------------------------------------");
-});
+async function analyze() {
+  if (!fs.existsSync(DATA_FILE)) {
+    console.error("❌ Run get-pr-files.mjs first.");
+    return;
+  }
+
+  const data = JSON.parse(fs.readFileSync(DATA_FILE));
+
+  const output = [];
+
+  for (const pr of data) {
+    if (!pr.files || pr.files.length === 0) {
+      console.log(`Skipping PR #${pr.pr_number} (no Cypress changes)`);
+      continue;
+    }
+
+    console.log(`Analyzing PR #${pr.pr_number}: ${pr.title}`);
+
+    try {
+      const prompt = buildPrompt(pr);
+
+      const result = await openai.chat.completions.create({
+        model: MODEL,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0,
+      });
+
+      let raw = result.choices[0].message.content.trim();
+      let suggestions;
+
+      try {
+        suggestions = JSON.parse(raw);
+      } catch {
+        suggestions = raw
+          .split("\n")
+          .filter((l) => l.trim())
+          .map((l) => l.replace(/^-/, "").trim());
+      }
+
+      output.push({
+        pr_number: pr.pr_number,
+        title: pr.title,
+        suggestions,
+        source: "openai",
+      });
+
+      console.log("AI Suggestions:");
+      suggestions.forEach((s) => console.log("- " + s));
+    } catch (err) {
+      console.log("❌ OpenAI failed, fallback suggestions used.");
+      output.push({
+        pr_number: pr.pr_number,
+        title: pr.title,
+        suggestions: [
+          "Test that the homepage loads",
+          "Verify navigation menu renders",
+          "Check that important links are visible",
+        ],
+        source: "fallback",
+      });
+    }
+
+    console.log("----------------------");
+  }
+
+  fs.writeFileSync(OUT_FILE, JSON.stringify(output, null, 2));
+  console.log("✔ Saved to data/pr-ai-suggestions.json");
+}
+
+analyze();
